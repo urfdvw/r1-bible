@@ -1,7 +1,10 @@
-import generalConfigSchema from "./general.json";
-import bibleVersionConfigSchema from "./bible_display.json";
-import projectorConfigSchema from "./projector.json";
-import miscConfigSchema from "./misc.json";
+import appConfigSchemaJson from "./app.json";
 
-const schemas = [bibleVersionConfigSchema, projectorConfigSchema, generalConfigSchema, miscConfigSchema];
+const appConfigSchema = {
+    ...appConfigSchemaJson,
+    legacyKeys: ["bible_display", "general"],
+};
+
+const schemas = [appConfigSchema];
 export default schemas;
+export { appConfigSchema };

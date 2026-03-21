@@ -6,8 +6,19 @@ import { isDefined, isObject } from "./utils";
 // local storage hook
 import { useLocalStorage } from "./useLocalStorage";
 
-function getConfigWithDefaults(current_config, schema) {
+function getConfigWithDefaults(current_config, schema, allConfigs = {}) {
     var config = jsonSchemaDefaults(schema);
+    const legacyKeys = Array.isArray(schema.legacyKeys) ? schema.legacyKeys : [];
+    for (const legacyKey of legacyKeys) {
+        const legacyConfig = allConfigs[legacyKey];
+        if (isDefined(legacyConfig) && isObject(legacyConfig)) {
+            for (const field_name in config) {
+                if (field_name in legacyConfig) {
+                    config[field_name] = legacyConfig[field_name];
+                }
+            }
+        }
+    }
     if (isDefined(current_config) && isObject(current_config)) {
         for (const field_name in config) {
             if (field_name in current_config) {
@@ -40,7 +51,7 @@ export default function useConfig(schemas) {
             for (const schema of schemas) {
                 const schema_name = schema.name;
                 const currentConfig = isDefined(localStorageState[schema_name]) ? localStorageState[schema_name] : null;
-                const configValues = getConfigWithDefaults(currentConfig, schema);
+                const configValues = getConfigWithDefaults(currentConfig, schema, localStorageState);
                 setLocalStorageState(schema_name, configValues);
             }
             setInitStep(-1); // mark as done

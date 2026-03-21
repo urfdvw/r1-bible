@@ -1,33 +1,38 @@
-import { Suspense, lazy, useContext } from "react";
+import { useContext, useEffect, useState } from "react";
+import Form from "@rjsf/mui";
+import validator from "@rjsf/validator-ajv8";
 import AppContext from "../AppContext";
-import schemas from "../configs";
+import { appConfigSchema } from "../configs";
 
-const ConfigForms = lazy(() => import("../utilComponents/react-user-config/ConfigForms"));
+const uiSchema = {
+    "ui:submitButtonOptions": {
+        "submitText": "应用设置",
+    },
+};
 
 export default function UserConfigs() {
-    const { appConfig, configTabSelection, isMobileReadingMode } = useContext(AppContext);
-    const visibleSchemas = isMobileReadingMode
-        ? schemas.filter((schema) => ["bible_display", "general"].includes(schema.name))
-        : schemas;
-    const visibleTabValue = Math.max(
-        0,
-        visibleSchemas.findIndex((schema) => schema.name === configTabSelection.tabName)
-    );
+    const { settings, setSettings } = useContext(AppContext);
+    const [formData, setFormData] = useState(settings);
+
+    useEffect(() => {
+        setFormData(settings);
+    }, [settings]);
 
     return (
-        <Suspense fallback={null}>
-            <ConfigForms
-                schemas={visibleSchemas}
-                config={appConfig.config}
-                setConfig={appConfig.setConfig}
-                tabValue={visibleTabValue}
-                setTabValue={(tabValue) => {
-                    const nextSchema = visibleSchemas[tabValue];
-                    if (nextSchema) {
-                        configTabSelection.setTabName(nextSchema.name);
-                    }
+        <div style={{ height: "100%", overflowY: "auto", padding: "16px" }}>
+            <Form
+                formData={formData}
+                schema={appConfigSchema}
+                uiSchema={uiSchema}
+                validator={validator}
+                onSubmit={(event) => {
+                    setSettings(event.formData);
                 }}
+                onChange={(event) => {
+                    setFormData(event.formData);
+                }}
+                omitExtraData={true}
             />
-        </Suspense>
+        </div>
     );
 }

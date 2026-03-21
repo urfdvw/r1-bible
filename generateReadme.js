@@ -1,32 +1,45 @@
-// Import the necessary modules
 import { promises as fs } from "fs";
 import path from "path";
 
-// Define the path for the markdown file you want to read
-const HomePath = path.join(process.cwd(), "./src/docs", "home.md");
-const AboutPath = path.join(process.cwd(), "./src/docs", "about.md");
+const outputMarkdownPath = path.join(process.cwd(), "README.md");
 
-// Define the path for the markdown file you want to generate
-const outputMarkdownPath = path.join(process.cwd(), ".", "README.md");
+const readmeContent = `# 阿丸圣经
 
-// Function to read an existing markdown file and generate a new one
+为小屏设备整理的移动端圣经阅读应用。
+
+## 当前功能
+
+- 多个预览标签页，可并行查看不同书卷或章节
+- 两步式圣经目录：先选书，再选章
+- 单一设置页，集中调整语言、版本、排版和主题
+- 支持简体、繁体、英文与中英对照
+
+## 本地运行
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+## 构建
+
+\`\`\`bash
+npm run build
+\`\`\`
+
+## 开源协议
+
+本项目基于 GPL 3.0 发布。
+`;
+
 async function generateMarkdown() {
     try {
-        // Read content from the existing markdown file
-        const HomeContent = await fs.readFile(HomePath, "utf8");
-        const AboutContent = await fs.readFile(AboutPath, "utf8");
-
-        // Combine the existing content with the new content
-        const combinedContent = [HomeContent, AboutContent].join("\n\n");
-
-        // Write the combined content to a new markdown file
-        await fs.writeFile(outputMarkdownPath, combinedContent);
-
+        await fs.writeFile(outputMarkdownPath, readmeContent);
         console.log("Markdown file generated successfully!");
     } catch (err) {
         console.error("Failed to generate markdown file:", err);
+        process.exitCode = 1;
     }
 }
 
-// Call the function to generate the markdown
 generateMarkdown();

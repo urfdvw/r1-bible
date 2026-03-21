@@ -1,20 +1,17 @@
 import AppContext from "../AppContext";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { PreviewVerseBox } from "./VerseBox";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import TabToolBar from "../utilComponents/TabToolBar";
-import { selectTabById } from "../layout/layoutUtils";
 import VerseRef from "../models/VerseRef";
 
-function PreviewList({ selected, setSelected, previewVerse, tabId }) {
-    const { getChapterVerses, isMobileReadingMode } = useContext(AppContext);
+function PreviewList({ previewVerse, tabId }) {
+    const { getChapterVerses } = useContext(AppContext);
     const verses = getChapterVerses(previewVerse.book, previewVerse.chapter);
     const containerId = `previewContainer-${tabId}`;
     const latestTargetNameRef = useRef("");
 
     const scrollToTarget = useCallback(
-        (targetName, { animated = false } = {}) => {
+        (targetName) => {
             const container = document.getElementById(containerId);
             if (!container) {
                 return false;
@@ -25,11 +22,7 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
             }
             const top =
                 container.scrollTop + target.getBoundingClientRect().top - container.getBoundingClientRect().top;
-            if (animated) {
-                container.scrollTo({ top, behavior: "smooth" });
-            } else {
-                container.scrollTop = top;
-            }
+            container.scrollTop = top;
             return true;
         },
         [containerId]
@@ -41,12 +34,7 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
         }
         const targetName = `preview-verse-${tabId}-${previewVerse.verse}`;
         latestTargetNameRef.current = targetName;
-        if (!isMobileReadingMode) {
-            scrollToTarget(targetName, { animated: true });
-            return;
-        }
 
-        // Mobile: no animation. Retry via animation frame until the target is ready.
         let cancelled = false;
         let rafId = 0;
         let attempts = 0;
@@ -56,7 +44,7 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
             if (cancelled) {
                 return;
             }
-            const scrolled = scrollToTarget(targetName, { animated: false });
+            const scrolled = scrollToTarget(targetName);
             if (scrolled || attempts >= maxAttempts) {
                 return;
             }
@@ -69,12 +57,9 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
             cancelled = true;
             cancelAnimationFrame(rafId);
         };
-    }, [previewVerse, tabId, isMobileReadingMode, scrollToTarget, verses.length]);
+    }, [previewVerse, scrollToTarget, tabId, verses.length]);
 
     useEffect(() => {
-        if (!isMobileReadingMode) {
-            return;
-        }
         const container = document.getElementById(containerId);
         if (!container) {
             return;
@@ -85,9 +70,7 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
                 if (rafId) {
                     cancelAnimationFrame(rafId);
                 }
-                rafId = requestAnimationFrame(() =>
-                    scrollToTarget(latestTargetNameRef.current, { animated: false })
-                );
+                rafId = requestAnimationFrame(() => scrollToTarget(latestTargetNameRef.current));
             }
         });
         resizeObserver.observe(container);
@@ -97,13 +80,7 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
             }
             resizeObserver.disconnect();
         };
-    }, [containerId, isMobileReadingMode, scrollToTarget]);
-
-    useEffect(() => {
-        if (selected && selected.book !== verses[0][0].book) {
-            setSelected(null);
-        }
-    }, [selected, verses, setSelected]);
+    }, [containerId, scrollToTarget]);
 
     return (
         <div id={containerId} style={{ height: "100%", overflowY: "auto", scrollBehavior: "auto" }}>
@@ -112,20 +89,12 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
                 return (
                     <div key={verseAnchorName} id={verseAnchorName} data-preview-anchor={verseAnchorName}>
                         <PreviewVerseBox
-                            setSelected={setSelected}
-                            selected={selected}
                             verseObj={
                                 new VerseRef({
                                     book: verseVersions[0].book,
                                     chapter: verseVersions[0].chapter,
                                     verse: verseVersions[0].verse,
                                 })
-                            }
-                            highlighted={
-                                selected &&
-                                verseVersions[0].book === selected.book &&
-                                verseVersions[0].chapter === selected.chapter &&
-                                verseVersions[0].verse === selected.verse
                             }
                         />
                     </div>
@@ -136,89 +105,45 @@ function PreviewList({ selected, setSelected, previewVerse, tabId }) {
 }
 
 export default function Preview({ tabId }) {
-    const [selected, setSelected] = useState(null);
-    const {
-        getChapterVerses,
-        getPreviewVerseForTab,
-        setPreviewVerseForTab,
-        getMultipleVerses,
-        helpTabSelection,
-        flexModel,
-        isMobileReadingMode,
-    } = useContext(AppContext);
+    const { getChapterVerses, getPreviewVerseForTab, setPreviewVerseForTab } = useContext(AppContext);
     const previewVerse = getPreviewVerseForTab(tabId);
     const verses = getChapterVerses(previewVerse.book, previewVerse.chapter);
-    const notificationHeight = selected ? "5em" : "0em";
-
-    const selectedVerseObj = selected ? getMultipleVerses(selected) : null;
-
-    const notification = selectedVerseObj
-        ? `已选中 ${selectedVerseObj[0][0].book_name} ${selectedVerseObj[0][0].chapter}:${selectedVerseObj[0][0].verse}`
-        : "暂无选中章节";
+    const title = verses[0]?.[0] ? `${verses[0][0].book_name} ${verses[0][0].chapter}` : "预览";
 
     const tools = [
         {
             text: "上一章",
             handler: () => {
-                if (previewVerse.chapter === 1) {
-                    console.log("没有上一章了");
+                if (previewVerse.chapter <= 1) {
                     return;
                 }
-                console.log("上一章");
-                setPreviewVerseForTab(tabId, new VerseRef({ book: previewVerse.book, chapter: previewVerse.chapter - 1, verse: 1 }));
+                setPreviewVerseForTab(
+                    tabId,
+                    new VerseRef({ book: previewVerse.book, chapter: previewVerse.chapter - 1, verse: 1 })
+                );
             },
         },
         {
             text: "下一章",
             handler: () => {
-                const testVerse = getMultipleVerses(
-                    new VerseRef({ book: previewVerse.book, chapter: previewVerse.chapter + 1, verse: 1 })
-                );
-                if (testVerse.length === 0) {
-                    console.log("没有下一章了");
+                const nextChapterVerses = getChapterVerses(previewVerse.book, previewVerse.chapter + 1);
+                if (nextChapterVerses.length === 0) {
                     return;
                 }
-                console.log("下一章");
-                setPreviewVerseForTab(tabId, new VerseRef({ book: previewVerse.book, chapter: previewVerse.chapter + 1, verse: 1 }));
+                setPreviewVerseForTab(
+                    tabId,
+                    new VerseRef({ book: previewVerse.book, chapter: previewVerse.chapter + 1, verse: 1 })
+                );
             },
         },
     ];
-    if (!isMobileReadingMode) {
-        tools.push({
-            text: "帮助",
-            handler: () => {
-                selectTabById(flexModel, "help_tab");
-                helpTabSelection.setTabName("preview");
-            },
-        });
-    }
 
     return (
         <div style={{ display: "flex", height: "100%", flexDirection: "column" }}>
             <div style={{ flexGrow: 0 }}>
-                <TabToolBar title={`${verses[0][0].book_name} ${verses[0][0].chapter}`} tools={tools} />
+                <TabToolBar title={title} tools={tools} />
             </div>
-            <PreviewList selected={selected} setSelected={setSelected} previewVerse={previewVerse} tabId={tabId} />
-            {!isMobileReadingMode && (
-                <Typography
-                    sx={{
-                        flexGrow: 0,
-                        transition: "max-height 1s ease",
-                        overflowY: "hidden",
-                        maxHeight: notificationHeight,
-                    }}
-                    component={"div"}
-                >
-                    {notification}
-                    <Button
-                        onClick={() => {
-                            setSelected(null);
-                        }}
-                    >
-                        取消选中
-                    </Button>
-                </Typography>
-            )}
+            <PreviewList previewVerse={previewVerse} tabId={tabId} />
         </div>
     );
 }

@@ -81,7 +81,7 @@ function findPreferredPreviewTabId(model, preferredTabId) {
     return firstPreviewTab ? firstPreviewTab.getId() : undefined;
 }
 
-export default function usePreviewTabs(flexModel, bibleDisplayConfig, isMobileReadingMode = false) {
+export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
     const [previewVersesByTabId, setPreviewVersesByTabId] = useState({
         [DEFAULT_PREVIEW_TAB_ID]: DEFAULT_PREVIEW_VERSE,
     });
@@ -189,23 +189,19 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig, isMobileRe
     const syncPreviewTabNames = useCallback(
         (model) => {
             const allPreviewTabs = getAllPreviewTabs(model);
-            const showRangeInName = isMobileReadingMode || allPreviewTabs.length > 1;
 
             allPreviewTabs.forEach((tabNode) => {
                 const tabVerse = previewVersesByTabId[tabNode.getId()] || DEFAULT_PREVIEW_VERSE;
                 const bookName = tabVerse?.book ? currentBookNames[tabVerse.book] : null;
                 const chapter = tabVerse?.chapter;
                 const defaultBookName = currentBookNames[DEFAULT_PREVIEW_VERSE.book];
-                const expectedName =
-                    showRangeInName
-                        ? `${bookName || defaultBookName} ${chapter || DEFAULT_PREVIEW_VERSE.chapter}`
-                        : "预览";
+                const expectedName = `${bookName || defaultBookName} ${chapter || DEFAULT_PREVIEW_VERSE.chapter}`;
                 if (tabNode.getName() !== expectedName) {
                     doInternalAction(FlexLayout.Actions.updateNodeAttributes(tabNode.getId(), { name: expectedName }));
                 }
             });
         },
-        [currentBookNames, doInternalAction, isMobileReadingMode, previewVersesByTabId]
+        [currentBookNames, doInternalAction, previewVersesByTabId]
     );
 
     const addPreviewTabToTabset = useCallback(

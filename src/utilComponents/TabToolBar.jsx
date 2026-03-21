@@ -1,22 +1,7 @@
 import Typography from "@mui/material/Typography";
-import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import Menu from "./Menu";
 
-export default function TabToolBar({ children, title = "", tools = null, hiddenTools = null }) {
-
-    /*
-        // const hiddenTools = [
-        const tools = [
-            {
-                text: "Help",
-                handler: () => {
-                    console.log("App menu bar -> Help");
-                },
-            },
-            ...
-        ];
-    */
+export default function TabToolBar({ title = "", tools = [] }) {
     return (
         <div
             style={{
@@ -45,19 +30,11 @@ export default function TabToolBar({ children, title = "", tools = null, hiddenT
                     justifyContent: "left",
                 }}
             >
-                <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                    {children}
-                    {tools ? (
-                        tools.map((tool) => (
-                            <Button onClick={tool.handler} key={tool.text}>
-                                {tool.text}
-                            </Button>
-                        ))
-                    ) : (
-                        <></>
-                    )}
-                    {hiddenTools ? <Menu label="⋮" options={hiddenTools} /> : <></>}
-                </Toolbar>
+                {tools.map((tool) => (
+                    <Button onClick={tool.handler} key={tool.text}>
+                        {tool.text}
+                    </Button>
+                ))}
             </div>
         </div>
     );
