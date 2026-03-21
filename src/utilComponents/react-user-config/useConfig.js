@@ -6,6 +6,13 @@ import { isDefined, isObject } from "./utils";
 // local storage hook
 import { useLocalStorage } from "./useLocalStorage";
 
+function normalizeConfigFieldValue(field_name, field_value) {
+    if (field_name === "contrast_layout" && field_value === "左右") {
+        return "并排";
+    }
+    return field_value;
+}
+
 function getConfigWithDefaults(current_config, schema, allConfigs = {}) {
     var config = jsonSchemaDefaults(schema);
     const legacyKeys = Array.isArray(schema.legacyKeys) ? schema.legacyKeys : [];
@@ -14,7 +21,7 @@ function getConfigWithDefaults(current_config, schema, allConfigs = {}) {
         if (isDefined(legacyConfig) && isObject(legacyConfig)) {
             for (const field_name in config) {
                 if (field_name in legacyConfig) {
-                    config[field_name] = legacyConfig[field_name];
+                    config[field_name] = normalizeConfigFieldValue(field_name, legacyConfig[field_name]);
                 }
             }
         }
@@ -22,7 +29,7 @@ function getConfigWithDefaults(current_config, schema, allConfigs = {}) {
     if (isDefined(current_config) && isObject(current_config)) {
         for (const field_name in config) {
             if (field_name in current_config) {
-                config[field_name] = current_config[field_name];
+                config[field_name] = normalizeConfigFieldValue(field_name, current_config[field_name]);
             }
         }
     }

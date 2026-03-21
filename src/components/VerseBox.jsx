@@ -16,7 +16,7 @@ const previewVerseBoxStyle = {
 };
 
 export function PreviewVerseBox({ verseObj }) {
-    const { getMultipleVerses } = useContext(AppContext);
+    const { getMultipleVerses, settings } = useContext(AppContext);
     const baseVerse = VerseRef.from(verseObj);
     const verses = getMultipleVerses(baseVerse);
     const textList =
@@ -28,13 +28,29 @@ export function PreviewVerseBox({ verseObj }) {
                       .join(" ")
               )
             : [];
+    const isParallelContrastLayout = settings.language === "对照" && settings.contrast_layout === "并排";
 
     return (
         <Box sx={previewVerseBoxStyle}>
             <Typography sx={{ paddingRight: 1, flexShrink: 0 }}>{baseVerse.verse}</Typography>
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    minWidth: 0,
+                    display: isParallelContrastLayout ? "grid" : "flex",
+                    flexDirection: isParallelContrastLayout ? undefined : "column",
+                    gridTemplateColumns: isParallelContrastLayout
+                        ? `repeat(${Math.max(textList.length, 1)}, minmax(0, 1fr))`
+                        : undefined,
+                    columnGap: isParallelContrastLayout ? 2 : undefined,
+                    rowGap: 0.5,
+                    alignItems: "start",
+                }}
+            >
                 {textList.map((text, index) => (
-                    <Typography key={index}>{text}</Typography>
+                    <Typography key={index} sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                        {text}
+                    </Typography>
                 ))}
             </Box>
         </Box>

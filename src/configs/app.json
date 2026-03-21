@@ -27,12 +27,6 @@
             "enum": ["前后", "并排"],
             "default": "前后"
         },
-        "range_location": {
-            "title": "经节范围注释位置",
-            "type": "string",
-            "enum": ["开头", "结尾"],
-            "default": "开头"
-        },
         "theme": {
             "title": "主题",
             "type": "string",

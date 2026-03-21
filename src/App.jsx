@@ -20,12 +20,11 @@ const defaultSettings = {
     chinese: "简体",
     english: "ASV",
     contrast_layout: "前后",
-    range_location: "开头",
     theme: "跟随系统",
     show_tips_on_startup: "是",
 };
 
-const DIAL_SCROLL_STEP = 72;
+const DIAL_SCROLL_STEP = 24;
 
 function App() {
     useAppViewportHeight();
@@ -84,10 +83,10 @@ function App() {
         };
 
         const handleScrollUp = () => {
-            scrollActivePreview(-DIAL_SCROLL_STEP);
+            scrollActivePreview(DIAL_SCROLL_STEP);
         };
         const handleScrollDown = () => {
-            scrollActivePreview(DIAL_SCROLL_STEP);
+            scrollActivePreview(-DIAL_SCROLL_STEP);
         };
 
         window.addEventListener("scrollUp", handleScrollUp);
