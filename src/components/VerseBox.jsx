@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { useContext } from "react";
 import AppContext from "../AppContext";
 import VerseRef from "../models/VerseRef";
+import HighlightedSpan from "../utilComponents/HighlightedSpan";
 
 const previewVerseBoxStyle = {
     border: "none",
@@ -13,6 +14,16 @@ const previewVerseBoxStyle = {
     alignItems: "flex-start",
     justifyContent: "space-between",
     cursor: "default",
+};
+
+const searchVerseBoxStyle = {
+    border: "2px solid #ccc",
+    borderRadius: 2,
+    padding: 1.25,
+    display: "flex",
+    flexDirection: "column",
+    gap: 0.5,
+    cursor: "pointer",
 };
 
 export function PreviewVerseBox({ verseObj }) {
@@ -53,6 +64,30 @@ export function PreviewVerseBox({ verseObj }) {
                     </Typography>
                 ))}
             </Box>
+        </Box>
+    );
+}
+
+export function SearchVerseBox({ verseObj, keyWords }) {
+    const { collapseBottomPanel, setPreviewVerse } = useContext(AppContext);
+
+    const handleShow = () => {
+        setPreviewVerse(
+            new VerseRef({
+                book: verseObj.book,
+                chapter: verseObj.chapter,
+                verse: verseObj.verse,
+            })
+        );
+        collapseBottomPanel();
+    };
+
+    return (
+        <Box onClick={handleShow} sx={searchVerseBoxStyle}>
+            <Typography sx={{ fontWeight: 700 }}>{`${verseObj.book_name} ${verseObj.chapter}:${verseObj.verse}`}</Typography>
+            <Typography sx={{ overflowWrap: "anywhere" }}>
+                <HighlightedSpan longString={verseObj.text} shortString={keyWords} />
+            </Typography>
         </Box>
     );
 }

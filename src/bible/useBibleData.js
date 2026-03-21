@@ -1,4 +1,5 @@
 import { getMultipleVerses, getChapterVerses, getBookMeta } from "./utils";
+import { preloadVersionFuseIndices } from "./fuseIndex";
 
 export default function useBibleData(bible, settings) {
     function _getSelectedVersions() {
@@ -17,6 +18,7 @@ export default function useBibleData(bible, settings) {
         } else if (settings.language === "对照") {
             versions = [ChineseVersion, EnglishVersion];
         }
+        preloadVersionFuseIndices(versions);
         return versions;
     }
 
@@ -36,6 +38,7 @@ export default function useBibleData(bible, settings) {
     }
 
     return {
+        getSelectedVersions: _getSelectedVersions,
         getMultipleVerses: _getMultipleVerses,
         getChapterVerses: _getChapterVerses,
         getBookMeta: _getBookMeta,

@@ -32,7 +32,7 @@ function App() {
     const [flexModel] = useState(() => FlexLayout.Model.fromJson(layoutJson));
     const appConfig = useConfig(schemas);
     const settings = appConfig.config.app || defaultSettings;
-    const { getMultipleVerses, getChapterVerses, getBookMeta } = useBibleData(bible, settings);
+    const { getSelectedVersions, getMultipleVerses, getChapterVerses, getBookMeta } = useBibleData(bible, settings);
     const {
         setPreviewVerse,
         getPreviewVerseForTab,
@@ -55,7 +55,10 @@ function App() {
         [appConfig]
     );
     const collapseBottomPanel = useCallback(() => {
-        const tabNode = flexModel.getNodeById("bible_toc_tab") || flexModel.getNodeById("config_tab");
+        const tabNode =
+            flexModel.getNodeById("bible_toc_tab") ||
+            flexModel.getNodeById("search_tab") ||
+            flexModel.getNodeById("config_tab");
         if (!tabNode) {
             return;
         }
@@ -123,6 +126,7 @@ function App() {
                 settings,
                 setSettings,
                 setSetting,
+                getSelectedVersions,
                 getMultipleVerses,
                 getChapterVerses,
                 getBookMeta,

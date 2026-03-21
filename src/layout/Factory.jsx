@@ -1,6 +1,7 @@
 import UserConfigs from "../components/UserConfigs";
 import Preview from "../components/Preview";
 import TableOfContents from "../components/TableOfContents";
+import TextSearch from "../components/TextSearch";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -22,6 +23,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <TableOfContents />
+            </div>
+        );
+    } else if (component === "search") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <TextSearch />
             </div>
         );
     }
