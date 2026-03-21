@@ -1,0 +1,37 @@
+{
+    "name": "bible_display",
+    "title": "圣经显示",
+    "type": "object",
+    "properties": {
+        "language": {
+            "title": "圣经语言",
+            "type": "string",
+            "enum": ["中文", "English", "对照"],
+            "default": "中文"
+        },
+        "chinese": {
+            "title": "中文圣经版本",
+            "type": "string",
+            "enum": ["简体", "繁體"],
+            "default": "简体"
+        },
+        "english": {
+            "title": "英文圣经版本",
+            "type": "string",
+            "enum": ["KJV", "ASV", "WEB"],
+            "default": "ASV"
+        },
+        "contrast_layout": {
+            "title": "对照显示排版",
+            "type": "string",
+            "enum": ["前后", "并排"],
+            "default": "前后"
+        },
+        "range_location": {
+            "title": "经节范围注释位置",
+            "type": "string",
+            "enum": ["开头", "结尾"],
+            "default": "开头"
+        }
+    }
+}

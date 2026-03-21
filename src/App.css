@@ -1,0 +1,36 @@
+.app {
+    background-color: red;
+    gap: 0px;
+    margin: 0;
+    padding: 0px;
+
+    /* Fallbacks */
+    height: 100vh;
+    height: 100dvh;
+    /* Use visual viewport height when available (set in App.jsx). */
+    height: var(--app-height, 100dvh);
+    min-height: var(--app-height, 100dvh);
+
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.app-header {
+    background-color: rgb(230, 230, 230);
+    flex-grow: 0;
+    display: flex;
+    align-items: center;
+}
+
+.app-body {
+    background-color: lightgray;
+    flex-grow: 1;
+    position: relative;
+}
+
+.app-tail {
+    background-color: lightgray;
+    flex-grow: 0;
+}
