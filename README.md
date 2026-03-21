@@ -2,25 +2,15 @@
 
 为小屏设备整理的移动端圣经阅读应用。
 
-## 当前功能
+[点此开始使用](https://urfdvw.github.io/r1-bible/)
 
-- 多个预览标签页，可并行查看不同书卷或章节
-- 两步式圣经目录：先选书，再选章
-- 单一设置页，集中调整语言、版本、排版和主题
+Rabbit R1 Creation
+![alt text](r1-bible.png)
+
+## 功能
+
+- 多Tab阅读，可并行查看不同书卷或章节
 - 支持简体、繁体、英文与中英对照
-
-## 本地运行
-
-```bash
-npm install
-npm run dev
-```
-
-## 构建
-
-```bash
-npm run build
-```
 
 ## 开源协议
 

@@ -16,7 +16,7 @@ export default [
     },
   },
   {
-    files: ['generateReadme.js', 'data/**/*.js'],
+    files: ['data/**/*.js'],
     languageOptions: {
       globals: {
         ...globals.node,
