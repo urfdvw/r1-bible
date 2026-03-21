@@ -26,8 +26,6 @@ const defaultSettings = {
 };
 
 const DIAL_SCROLL_STEP = 72;
-const SCROLL_VIBRATION_MS = 100;
-
 function App() {
     useAppViewportHeight();
 
@@ -73,13 +71,6 @@ function App() {
             return undefined;
         }
 
-        const vibrateOnScroll = () => {
-            if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
-                return;
-            }
-            navigator.vibrate(SCROLL_VIBRATION_MS);
-        };
-
         const scrollActivePreview = (delta) => {
             const container = document.getElementById(`previewContainer-${latestActivePreviewTabId}`);
             if (!container || container.getClientRects().length === 0) {
@@ -93,7 +84,6 @@ function App() {
             }
 
             container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
-            vibrateOnScroll();
         };
 
         const handleScrollUp = () => {
