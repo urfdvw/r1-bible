@@ -438,5 +438,6 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
         setPreviewVerseForTab,
         handleRenderTabSet,
         handleLayoutModelChange,
+        latestActivePreviewTabId,
     };
 }

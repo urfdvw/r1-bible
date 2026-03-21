@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import AppContext from "./AppContext";
 import * as FlexLayout from "flexlayout-react";
@@ -25,6 +25,19 @@ const defaultSettings = {
     show_tips_on_startup: "是",
 };
 
+const KEYBOARD_SCROLL_STEP = 72;
+
+function shouldIgnoreKeyboardScroll(target) {
+    if (!(target instanceof HTMLElement)) {
+        return false;
+    }
+    return (
+        target.isContentEditable ||
+        ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName) ||
+        Boolean(target.closest('[contenteditable="true"]'))
+    );
+}
+
 function App() {
     useAppViewportHeight();
 
@@ -32,8 +45,14 @@ function App() {
     const appConfig = useConfig(schemas);
     const settings = appConfig.config.app || defaultSettings;
     const { getMultipleVerses, getChapterVerses, getBookMeta } = useBibleData(bible, settings);
-    const { setPreviewVerse, getPreviewVerseForTab, setPreviewVerseForTab, handleRenderTabSet, handleLayoutModelChange } =
-        usePreviewTabs(flexModel, settings);
+    const {
+        setPreviewVerse,
+        getPreviewVerseForTab,
+        setPreviewVerseForTab,
+        handleRenderTabSet,
+        handleLayoutModelChange,
+        latestActivePreviewTabId,
+    } = usePreviewTabs(flexModel, settings);
 
     const setSettings = useCallback(
         (nextSettings) => {
@@ -58,6 +77,40 @@ function App() {
         }
         flexModel.doAction(FlexLayout.Actions.updateNodeAttributes(parent.getId(), { selected: -1 }));
     }, [flexModel]);
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+                return;
+            }
+            if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+                return;
+            }
+            if (shouldIgnoreKeyboardScroll(event.target)) {
+                return;
+            }
+
+            const container = document.getElementById(`previewContainer-${latestActivePreviewTabId}`);
+            if (!container || container.getClientRects().length === 0) {
+                return;
+            }
+
+            const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+            const delta = event.key === "ArrowDown" ? KEYBOARD_SCROLL_STEP : -KEYBOARD_SCROLL_STEP;
+            const nextScrollTop = Math.max(0, Math.min(container.scrollTop + delta, maxScrollTop));
+            if (nextScrollTop === container.scrollTop) {
+                return;
+            }
+
+            event.preventDefault();
+            container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [latestActivePreviewTabId]);
 
     let dark = null;
     let highContrast = false;
