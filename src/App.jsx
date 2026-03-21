@@ -20,11 +20,13 @@ const defaultSettings = {
     chinese: "简体",
     english: "ASV",
     contrast_layout: "前后",
+    disable_wheel: "否",
     theme: "跟随系统",
     show_tips_on_startup: "是",
 };
 
 const DIAL_SCROLL_STEP = 72;
+const SCROLL_VIBRATION_MS = 100;
 
 function App() {
     useAppViewportHeight();
@@ -67,6 +69,17 @@ function App() {
     }, [flexModel]);
 
     useEffect(() => {
+        if (settings.disable_wheel === "是") {
+            return undefined;
+        }
+
+        const vibrateOnScroll = () => {
+            if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") {
+                return;
+            }
+            navigator.vibrate(SCROLL_VIBRATION_MS);
+        };
+
         const scrollActivePreview = (delta) => {
             const container = document.getElementById(`previewContainer-${latestActivePreviewTabId}`);
             if (!container || container.getClientRects().length === 0) {
@@ -80,6 +93,7 @@ function App() {
             }
 
             container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
+            vibrateOnScroll();
         };
 
         const handleScrollUp = () => {
@@ -95,7 +109,7 @@ function App() {
             window.removeEventListener("scrollUp", handleScrollUp);
             window.removeEventListener("scrollDown", handleScrollDown);
         };
-    }, [latestActivePreviewTabId]);
+    }, [latestActivePreviewTabId, settings.disable_wheel]);
 
     let dark = null;
     let highContrast = false;
