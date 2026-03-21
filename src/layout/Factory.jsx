@@ -4,12 +4,13 @@ import TableOfContents from "../components/TableOfContents";
 import TextSearch from "../components/TextSearch";
 
 const fullSize = { height: "100%", width: "100%" };
+const scrollableFullSize = { height: "100%", width: "100%", overflowY: "auto" };
 
 const Factory = (node) => {
     const component = node.getComponent();
     if (component === "config") {
         return (
-            <div className="tab_content" style={fullSize}>
+            <div className="tab_content" style={scrollableFullSize}>
                 <UserConfigs />
             </div>
         );

@@ -19,7 +19,7 @@ export default function UserConfigs() {
     }, [settings]);
 
     return (
-        <div style={{ height: "100%", overflowY: "auto", padding: "16px" }}>
+        <div style={{ padding: "16px", boxSizing: "border-box" }}>
             <Form
                 formData={formData}
                 schema={appConfigSchema}
