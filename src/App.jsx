@@ -24,7 +24,7 @@ const defaultSettings = {
     show_tips_on_startup: "是",
 };
 
-const DIAL_SCROLL_STEP = 24;
+const DIAL_SCROLL_STEP = 72;
 
 function App() {
     useAppViewportHeight();
