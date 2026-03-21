@@ -25,18 +25,7 @@ const defaultSettings = {
     show_tips_on_startup: "是",
 };
 
-const KEYBOARD_SCROLL_STEP = 72;
-
-function shouldIgnoreKeyboardScroll(target) {
-    if (!(target instanceof HTMLElement)) {
-        return false;
-    }
-    return (
-        target.isContentEditable ||
-        ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(target.tagName) ||
-        Boolean(target.closest('[contenteditable="true"]'))
-    );
-}
+const DIAL_SCROLL_STEP = 72;
 
 function App() {
     useAppViewportHeight();
@@ -79,36 +68,33 @@ function App() {
     }, [flexModel]);
 
     useEffect(() => {
-        const handleKeyDown = (event) => {
-            if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
-                return;
-            }
-            if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
-                return;
-            }
-            if (shouldIgnoreKeyboardScroll(event.target)) {
-                return;
-            }
-
+        const scrollActivePreview = (delta) => {
             const container = document.getElementById(`previewContainer-${latestActivePreviewTabId}`);
             if (!container || container.getClientRects().length === 0) {
                 return;
             }
 
             const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
-            const delta = event.key === "ArrowDown" ? KEYBOARD_SCROLL_STEP : -KEYBOARD_SCROLL_STEP;
             const nextScrollTop = Math.max(0, Math.min(container.scrollTop + delta, maxScrollTop));
             if (nextScrollTop === container.scrollTop) {
                 return;
             }
 
-            event.preventDefault();
             container.scrollTo({ top: nextScrollTop, behavior: "smooth" });
         };
 
-        window.addEventListener("keydown", handleKeyDown);
+        const handleScrollUp = () => {
+            scrollActivePreview(-DIAL_SCROLL_STEP);
+        };
+        const handleScrollDown = () => {
+            scrollActivePreview(DIAL_SCROLL_STEP);
+        };
+
+        window.addEventListener("scrollUp", handleScrollUp);
+        window.addEventListener("scrollDown", handleScrollDown);
         return () => {
-            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("scrollUp", handleScrollUp);
+            window.removeEventListener("scrollDown", handleScrollDown);
         };
     }, [latestActivePreviewTabId]);
 
