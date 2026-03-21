@@ -8,12 +8,53 @@ import { enNames, siNames, trNames } from "../bible";
 const PREVIEW_COMPONENT = "preview";
 const DEFAULT_PREVIEW_TAB_ID = "preview_tab_1";
 const DEFAULT_PREVIEW_VERSE = new VerseRef({ book: 43, chapter: 3, verse: 16 });
+const PREVIEW_TABS_STORAGE_KEY = "preview_tabs_cache";
 
 const STRUCTURE_ACTIONS = new Set([
     FlexLayout.Actions.ADD_NODE,
     FlexLayout.Actions.DELETE_TAB,
     FlexLayout.Actions.MOVE_NODE,
 ]);
+
+function readPreviewTabsCache() {
+    if (typeof window === "undefined") {
+        return null;
+    }
+    try {
+        const raw = window.localStorage.getItem(PREVIEW_TABS_STORAGE_KEY);
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.tabs) || parsed.tabs.length === 0) {
+            return null;
+        }
+        return {
+            tabs: parsed.tabs.map((verseObj) => VerseRef.from(verseObj)),
+            activeIndex: Number.isInteger(parsed.activeIndex) ? parsed.activeIndex : 0,
+        };
+    } catch (error) {
+        console.error("Failed to read preview tab cache", error);
+        return null;
+    }
+}
+
+function writePreviewTabsCache(tabs, activeIndex) {
+    if (typeof window === "undefined") {
+        return;
+    }
+    try {
+        window.localStorage.setItem(
+            PREVIEW_TABS_STORAGE_KEY,
+            JSON.stringify({
+                tabs: tabs.map((verseRef) => VerseRef.from(verseRef).toJSON()),
+                activeIndex,
+            })
+        );
+    } catch (error) {
+        console.error("Failed to write preview tab cache", error);
+    }
+}
 
 function isPreviewTabNode(node) {
     return (
@@ -88,6 +129,7 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
     const [latestActivePreviewTabId, setLatestActivePreviewTabId] = useState(DEFAULT_PREVIEW_TAB_ID);
     const previewTabCounterRef = useRef(2);
     const internalActionDepthRef = useRef(0);
+    const hasRestoredCacheRef = useRef(false);
     const currentBookNames = getBookNames(bibleDisplayConfig);
 
     const doInternalAction = useCallback(
@@ -105,6 +147,26 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
     const getLatestPreviewTabId = useCallback(() => {
         return findPreferredPreviewTabId(flexModel, latestActivePreviewTabId);
     }, [flexModel, latestActivePreviewTabId]);
+
+    const persistPreviewTabs = useCallback(
+        (model, versesByTabId = previewVersesByTabId, preferredTabId = latestActivePreviewTabId) => {
+            if (!hasRestoredCacheRef.current) {
+                return;
+            }
+            const previewTabs = getAllPreviewTabs(model);
+            if (previewTabs.length === 0) {
+                return;
+            }
+            const tabs = previewTabs.map((tabNode) => versesByTabId[tabNode.getId()] || DEFAULT_PREVIEW_VERSE);
+            const activeTabId = findPreferredPreviewTabId(model, preferredTabId) || previewTabs[0].getId();
+            const activeIndex = Math.max(
+                0,
+                previewTabs.findIndex((tabNode) => tabNode.getId() === activeTabId)
+            );
+            writePreviewTabsCache(tabs, activeIndex);
+        },
+        [latestActivePreviewTabId, previewVersesByTabId]
+    );
 
     const setPreviewVerseForTab = useCallback((tabId, verseObj) => {
         if (!tabId) {
@@ -270,16 +332,81 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
                 const selectedNode = model.getNodeById(selectedTabId);
                 if (isPreviewTabNode(selectedNode)) {
                     setLatestActivePreviewTabId(selectedTabId);
+                    persistPreviewTabs(model, previewVersesByTabId, selectedTabId);
                 }
                 return;
             }
 
             if (STRUCTURE_ACTIONS.has(action.type)) {
                 syncPreviewStructureRules(model);
+                persistPreviewTabs(model);
             }
         },
-        [syncPreviewStructureRules]
+        [persistPreviewTabs, previewVersesByTabId, syncPreviewStructureRules]
     );
+
+    const restorePreviewTabsFromCache = useCallback(() => {
+        if (hasRestoredCacheRef.current) {
+            return;
+        }
+        hasRestoredCacheRef.current = true;
+
+        const cached = readPreviewTabsCache();
+        if (!cached) {
+            syncPreviewStructureRules(flexModel);
+            return;
+        }
+
+        const previewTabset = getPreviewTabsets(flexModel)[0]?.tabset;
+        const previewTabsetId = previewTabset?.getId();
+        if (!previewTabsetId) {
+            syncPreviewStructureRules(flexModel);
+            return;
+        }
+
+        const existingPreviewTabs = getAllPreviewTabs(flexModel);
+        existingPreviewTabs.slice(1).forEach((tabNode) => {
+            doInternalAction(FlexLayout.Actions.deleteTab(tabNode.getId()));
+        });
+
+        const normalizedTabs = cached.tabs.map((verseObj, index) => ({
+            id: `preview_tab_${index + 1}`,
+            verse: VerseRef.from(verseObj),
+        }));
+
+        for (let index = 1; index < normalizedTabs.length; index += 1) {
+            doInternalAction(
+                FlexLayout.Actions.addNode(
+                    {
+                        type: "tab",
+                        id: normalizedTabs[index].id,
+                        name: "预览",
+                        component: PREVIEW_COMPONENT,
+                        enableClose: true,
+                    },
+                    previewTabsetId,
+                    FlexLayout.DockLocation.CENTER,
+                    -1,
+                    false
+                )
+            );
+        }
+
+        const nextPreviewVersesByTabId = Object.fromEntries(
+            normalizedTabs.map((tab) => [tab.id, VerseRef.from(tab.verse)])
+        );
+        setPreviewVersesByTabId(nextPreviewVersesByTabId);
+
+        const maxActiveIndex = Math.max(0, normalizedTabs.length - 1);
+        const activeIndex = Math.min(Math.max(cached.activeIndex, 0), maxActiveIndex);
+        const activeTabId = normalizedTabs[activeIndex]?.id || DEFAULT_PREVIEW_TAB_ID;
+        setLatestActivePreviewTabId(activeTabId);
+        doInternalAction(FlexLayout.Actions.selectTab(activeTabId));
+
+        previewTabCounterRef.current = normalizedTabs.length + 1;
+        syncPreviewStructureRules(flexModel);
+        persistPreviewTabs(flexModel, nextPreviewVersesByTabId, activeTabId);
+    }, [doInternalAction, flexModel, persistPreviewTabs, syncPreviewStructureRules]);
 
     useEffect(() => {
         const previewTabIds = getAllPreviewTabs(flexModel).map((tabNode) => tabNode.getId());
@@ -291,12 +418,16 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
             return Math.max(max, Number(match[1]));
         }, 1);
         previewTabCounterRef.current = maxIndex + 1;
-        syncPreviewStructureRules(flexModel);
-    }, [flexModel, syncPreviewStructureRules]);
+        restorePreviewTabsFromCache();
+    }, [flexModel, restorePreviewTabsFromCache]);
 
     useEffect(() => {
         syncPreviewTabNames(flexModel);
     }, [flexModel, syncPreviewTabNames]);
+
+    useEffect(() => {
+        persistPreviewTabs(flexModel);
+    }, [flexModel, persistPreviewTabs, previewVersesByTabId, latestActivePreviewTabId]);
 
     const previewVerse = getPreviewVerseForTab(getLatestPreviewTabId());
 
