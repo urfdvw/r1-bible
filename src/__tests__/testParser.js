@@ -1,4 +1,4 @@
-import { getBook, getChapterVerse } from "../bible/parser";
+import { getBook, getChapterVerse, parseVerseQuery } from "../bible/parser";
 
 describe("Test getBook", () => {
     test("HE", () => {
@@ -187,5 +187,27 @@ describe("Additional representative tests for getChapterVerse", () => {
             endChapter: undefined,
             endVerse: undefined,
         });
+    });
+});
+
+describe("Test parseVerseQuery", () => {
+    test("parses a complete query", () => {
+        expect(parseVerseQuery("约翰福音 3 16")).toStrictEqual({
+            book: 43,
+            chapter: 3,
+            verse: 16,
+        });
+    });
+
+    test("ignores range ending content", () => {
+        expect(parseVerseQuery("约翰福音 3 16-17")).toStrictEqual({
+            book: 43,
+            chapter: 3,
+            verse: 16,
+        });
+    });
+
+    test("returns null when parsing fails", () => {
+        expect(parseVerseQuery("not a bible ref")).toBeNull();
     });
 });

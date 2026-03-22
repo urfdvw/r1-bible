@@ -9,6 +9,7 @@ import DarkTheme from "react-lazy-dark-theme";
 import useConfig from "./utilComponents/react-user-config/useConfig";
 import schemas from "./configs";
 import bible from "./bible";
+import { parseVerseQuery } from "./bible/parser";
 import useBibleData from "./bible/useBibleData";
 import usePreviewTabs from "./utilHooks/usePreviewTabs";
 import TipsModal from "./components/TipsModal";
@@ -27,10 +28,21 @@ const defaultSettings = {
 };
 
 const DIAL_SCROLL_STEP = 72;
+
+function readStartupQueryVerseFromUrl() {
+    if (typeof window === "undefined") {
+        return null;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return parseVerseQuery(params.get("query") || "");
+}
+
 function App() {
     useAppViewportHeight();
 
     const [flexModel] = useState(() => FlexLayout.Model.fromJson(layoutJson));
+    const [startupQueryVerse] = useState(() => readStartupQueryVerseFromUrl());
     const appConfig = useConfig(schemas);
     const settings = appConfig.config.app || defaultSettings;
     const { getSelectedVersions, getMultipleVerses, getChapterVerses, getBookMeta } = useBibleData(bible, settings);
@@ -41,7 +53,7 @@ function App() {
         handleRenderTabSet,
         handleLayoutModelChange,
         latestActivePreviewTabId,
-    } = usePreviewTabs(flexModel, settings);
+    } = usePreviewTabs(flexModel, settings, startupQueryVerse);
 
     const setSettings = useCallback(
         (nextSettings) => {

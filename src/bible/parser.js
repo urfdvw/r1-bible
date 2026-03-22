@@ -183,3 +183,23 @@ export function getChapterVerse(refString) {
         endVerse: endRef.v,
     };
 }
+
+export function parseVerseQuery(queryString) {
+    const trimmed = (queryString || "").trim();
+    if (!trimmed) {
+        return null;
+    }
+
+    const { book, remnant } = getBook(trimmed);
+    const { chapter, verse } = getChapterVerse(remnant);
+
+    if (!book || !chapter || !verse) {
+        return null;
+    }
+
+    return {
+        book,
+        chapter,
+        verse,
+    };
+}

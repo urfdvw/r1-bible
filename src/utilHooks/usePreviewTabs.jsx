@@ -122,7 +122,7 @@ function findPreferredPreviewTabId(model, preferredTabId) {
     return firstPreviewTab ? firstPreviewTab.getId() : undefined;
 }
 
-export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
+export default function usePreviewTabs(flexModel, bibleDisplayConfig, startupQueryVerse = null) {
     const [previewVersesByTabId, setPreviewVersesByTabId] = useState({
         [DEFAULT_PREVIEW_TAB_ID]: DEFAULT_PREVIEW_VERSE,
     });
@@ -130,6 +130,8 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
     const previewTabCounterRef = useRef(2);
     const internalActionDepthRef = useRef(0);
     const hasRestoredCacheRef = useRef(false);
+    const hadCachedPreviewTabsRef = useRef(false);
+    const hasAppliedStartupQueryRef = useRef(false);
     const currentBookNames = getBookNames(bibleDisplayConfig);
 
     const doInternalAction = useCallback(
@@ -267,12 +269,16 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
     );
 
     const addPreviewTabToTabset = useCallback(
-        (tabsetId) => {
+        (tabsetId, initialVerse = null) => {
             const sourceTabId = getLatestPreviewTabId();
-            const sourceVerse = sourceTabId ? getPreviewVerseForTab(sourceTabId) : DEFAULT_PREVIEW_VERSE;
+            const sourceVerse = initialVerse
+                ? VerseRef.from(initialVerse)
+                : sourceTabId
+                ? getPreviewVerseForTab(sourceTabId)
+                : DEFAULT_PREVIEW_VERSE;
             const newPreviewTabId = `preview_tab_${previewTabCounterRef.current++}`;
 
-            flexModel.doAction(
+            doInternalAction(
                 FlexLayout.Actions.addNode(
                     {
                         type: "tab",
@@ -291,7 +297,23 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
             setPreviewVersesByTabId((map) => ({ ...map, [newPreviewTabId]: VerseRef.from(sourceVerse) }));
             setLatestActivePreviewTabId(newPreviewTabId);
         },
-        [flexModel, getLatestPreviewTabId, getPreviewVerseForTab]
+        [doInternalAction, getLatestPreviewTabId, getPreviewVerseForTab]
+    );
+
+    const openPreviewVerseInNewTab = useCallback(
+        (verseObj) => {
+            const previewTabsetId = getPreviewTabsets(flexModel)[0]?.tabset?.getId();
+            if (!previewTabsetId) {
+                const activeTabId = getLatestPreviewTabId();
+                if (activeTabId) {
+                    setPreviewVerseForTab(activeTabId, verseObj);
+                    doInternalAction(FlexLayout.Actions.selectTab(activeTabId));
+                }
+                return;
+            }
+            addPreviewTabToTabset(previewTabsetId, verseObj);
+        },
+        [addPreviewTabToTabset, doInternalAction, flexModel, getLatestPreviewTabId, setPreviewVerseForTab]
     );
 
     const handleRenderTabSet = useCallback(
@@ -352,6 +374,7 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
         hasRestoredCacheRef.current = true;
 
         const cached = readPreviewTabsCache();
+        hadCachedPreviewTabsRef.current = Boolean(cached);
         if (!cached) {
             syncPreviewStructureRules(flexModel);
             return;
@@ -420,6 +443,38 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig) {
         previewTabCounterRef.current = maxIndex + 1;
         restorePreviewTabsFromCache();
     }, [flexModel, restorePreviewTabsFromCache]);
+
+    useEffect(() => {
+        if (!startupQueryVerse || hasAppliedStartupQueryRef.current || !hasRestoredCacheRef.current) {
+            return;
+        }
+
+        hasAppliedStartupQueryRef.current = true;
+        const normalizedStartupVerse = VerseRef.from(startupQueryVerse).with({
+            endChapter: null,
+            endVerse: null,
+        });
+
+        if (hadCachedPreviewTabsRef.current) {
+            openPreviewVerseInNewTab(normalizedStartupVerse);
+            return;
+        }
+
+        const activeTabId = getLatestPreviewTabId();
+        if (!activeTabId) {
+            return;
+        }
+
+        setPreviewVerseForTab(activeTabId, normalizedStartupVerse);
+        doInternalAction(FlexLayout.Actions.selectTab(activeTabId));
+        setLatestActivePreviewTabId(activeTabId);
+    }, [
+        doInternalAction,
+        getLatestPreviewTabId,
+        openPreviewVerseInNewTab,
+        setPreviewVerseForTab,
+        startupQueryVerse,
+    ]);
 
     useEffect(() => {
         syncPreviewTabNames(flexModel);
