@@ -5,7 +5,7 @@ import TabToolBar from "../utilComponents/TabToolBar";
 import VerseRef from "../models/VerseRef";
 
 function PreviewList({ previewVerse, tabId }) {
-    const { getChapterVerses } = useContext(AppContext);
+    const { getChapterVerses, setPreviewVerseForTab } = useContext(AppContext);
     const verses = getChapterVerses(previewVerse.book, previewVerse.chapter);
     const containerId = `previewContainer-${tabId}`;
     const latestTargetNameRef = useRef("");
@@ -26,6 +26,17 @@ function PreviewList({ previewVerse, tabId }) {
             return true;
         },
         [containerId]
+    );
+
+    const handleSelectVerse = useCallback(
+        (verseObj) => {
+            const nextVerse = VerseRef.from(verseObj);
+            const targetName = `preview-verse-${tabId}-${nextVerse.verse}`;
+            latestTargetNameRef.current = targetName;
+            scrollToTarget(targetName);
+            setPreviewVerseForTab(tabId, nextVerse);
+        },
+        [scrollToTarget, setPreviewVerseForTab, tabId]
     );
 
     useEffect(() => {
@@ -95,6 +106,15 @@ function PreviewList({ previewVerse, tabId }) {
                                     chapter: verseVersions[0].chapter,
                                     verse: verseVersions[0].verse,
                                 })
+                            }
+                            onClick={() =>
+                                handleSelectVerse(
+                                    new VerseRef({
+                                        book: verseVersions[0].book,
+                                        chapter: verseVersions[0].chapter,
+                                        verse: verseVersions[0].verse,
+                                    })
+                                )
                             }
                         />
                     </div>

@@ -13,7 +13,6 @@ const previewVerseBoxStyle = {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    cursor: "default",
 };
 
 const searchVerseBoxStyle = {
@@ -26,7 +25,7 @@ const searchVerseBoxStyle = {
     cursor: "pointer",
 };
 
-export function PreviewVerseBox({ verseObj }) {
+export function PreviewVerseBox({ verseObj, onClick }) {
     const { getMultipleVerses, settings } = useContext(AppContext);
     const baseVerse = VerseRef.from(verseObj);
     const verses = getMultipleVerses(baseVerse);
@@ -42,7 +41,13 @@ export function PreviewVerseBox({ verseObj }) {
     const isParallelContrastLayout = settings.language === "对照" && settings.contrast_layout === "并排";
 
     return (
-        <Box sx={previewVerseBoxStyle}>
+        <Box
+            onClick={onClick}
+            sx={{
+                ...previewVerseBoxStyle,
+                cursor: onClick ? "pointer" : "default",
+            }}
+        >
             <Typography sx={{ paddingRight: 1, flexShrink: 0 }}>{baseVerse.verse}</Typography>
             <Box
                 sx={{

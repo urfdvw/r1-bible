@@ -132,7 +132,7 @@ export default function TextSearch() {
                     }}
                 >
                     <IconButton
-                        size="small"
+                        // size="small"
                         onClick={handlePrevPage}
                         disabled={currentPage === 1}
                         sx={{
@@ -158,7 +158,7 @@ export default function TextSearch() {
                         {currentPage}/{totalPages}
                     </Typography>
                     <IconButton
-                        size="small"
+                        // size="small"
                         onClick={handleNextPage}
                         disabled={currentPage === totalPages}
                         sx={{
