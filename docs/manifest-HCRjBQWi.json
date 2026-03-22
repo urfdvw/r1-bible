@@ -1,7 +1,7 @@
 {
-    "name": "阿丸圣经",
-    "short_name": "阿丸圣经",
-    "description": "为 rabbit r1 设计的小屏圣经 app",
+    "name": "Instant Bible",
+    "short_name": "Instant Bible",
+    "description": "Lightweight multi-tab Bible reader. 轻量级多标签圣经阅读工具。",
     "icons": [
         {
             "src": "/bible-icon.svg",

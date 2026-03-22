@@ -1,8 +1,8 @@
-# 阿丸圣经
+# Instant Bible
 
-为小屏设备整理的移动端圣经阅读应用。
+轻量级多标签圣经阅读工具。
 
-[点此开始使用](https://urfdvw.github.io/r1-bible/)
+[点此开始使用](https://www.instantbible.org/)
 
 Rabbit R1 Creation
 
@@ -11,8 +11,10 @@ Rabbit R1 Creation
 ## 功能
 
 - 多Tab阅读，可并行查看不同书卷或章节
+    - 拖拽tab可以并排摆放多本书卷
 - 支持简体、繁体、英文与中英对照
 - 支持按文字搜索
+- 为小屏设备优化
 
 ## 开源协议
 
