@@ -9,7 +9,7 @@ import DarkTheme from "react-lazy-dark-theme";
 import useConfig from "./utilComponents/react-user-config/useConfig";
 import schemas from "./configs";
 import bible from "./bible";
-import { parseVerseQuery } from "./bible/parser";
+import { formatVerseQuery, parseVerseQuery } from "./bible/parser";
 import useBibleData from "./bible/useBibleData";
 import usePreviewTabs from "./utilHooks/usePreviewTabs";
 import TipsModal from "./components/TipsModal";
@@ -47,6 +47,7 @@ function App() {
     const settings = appConfig.config.app || defaultSettings;
     const { getSelectedVersions, getMultipleVerses, getChapterVerses, getBookMeta } = useBibleData(bible, settings);
     const {
+        previewVerse,
         setPreviewVerse,
         getPreviewVerseForTab,
         setPreviewVerseForTab,
@@ -116,6 +117,25 @@ function App() {
             window.removeEventListener("scrollDown", handleScrollDown);
         };
     }, [latestActivePreviewTabId, settings.disable_wheel]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const nextQuery = formatVerseQuery(previewVerse, settings);
+        if (!nextQuery) {
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("query") === nextQuery) {
+            return;
+        }
+
+        url.searchParams.set("query", nextQuery);
+        window.history.replaceState(window.history.state, "", url.toString());
+    }, [previewVerse, settings]);
 
     let dark = null;
     let highContrast = false;

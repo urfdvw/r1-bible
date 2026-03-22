@@ -23,6 +23,16 @@ const bookFuse = new Fuse(bookEntries, {
     shouldSort: true,
 });
 
+function getPreferredBookNames(bibleDisplayConfig) {
+    if (bibleDisplayConfig?.language === "English") {
+        return enNames;
+    }
+    if (bibleDisplayConfig?.chinese === "繁體") {
+        return trNames;
+    }
+    return siNames;
+}
+
 export function getBook(string) {
     const trimmed = (string || "").trim();
     if (!trimmed) {
@@ -202,4 +212,25 @@ export function parseVerseQuery(queryString) {
         chapter,
         verse,
     };
+}
+
+export function formatVerseQuery(verseRef, bibleDisplayConfig) {
+    const normalized = verseRef || {};
+    if (!normalized.book || !normalized.chapter || !normalized.verse) {
+        return "";
+    }
+
+    const bookName = getPreferredBookNames(bibleDisplayConfig)[normalized.book];
+    if (!bookName) {
+        return "";
+    }
+
+    const start = `${bookName} ${normalized.chapter}:${normalized.verse}`;
+    if (!normalized.endVerse) {
+        return start;
+    }
+    if (!normalized.endChapter || normalized.endChapter === normalized.chapter) {
+        return `${start}-${normalized.endVerse}`;
+    }
+    return `${start}-${normalized.endChapter}:${normalized.endVerse}`;
 }

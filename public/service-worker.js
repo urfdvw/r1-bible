@@ -1,4 +1,4 @@
-const CACHE_NAME = "bible-presenter-cache-v2";
+const CACHE_NAME = "instantbible-cache-v1";
 
 // List all URLs you want to cache
 const urlsToCache = ["/", "/index.html"];

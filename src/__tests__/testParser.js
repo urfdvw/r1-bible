@@ -1,4 +1,4 @@
-import { getBook, getChapterVerse, parseVerseQuery } from "../bible/parser";
+import { getBook, getChapterVerse, parseVerseQuery, formatVerseQuery } from "../bible/parser";
 
 describe("Test getBook", () => {
     test("HE", () => {
@@ -209,5 +209,20 @@ describe("Test parseVerseQuery", () => {
 
     test("returns null when parsing fails", () => {
         expect(parseVerseQuery("not a bible ref")).toBeNull();
+    });
+});
+
+describe("Test formatVerseQuery", () => {
+    test("formats a single verse for the active language", () => {
+        expect(formatVerseQuery({ book: 43, chapter: 3, verse: 16 }, { language: "English" })).toBe("John 3:16");
+    });
+
+    test("formats a same-chapter range", () => {
+        expect(
+            formatVerseQuery(
+                { book: 43, chapter: 3, verse: 16, endChapter: null, endVerse: 17 },
+                { language: "中文", chinese: "简体" }
+            )
+        ).toBe("约翰福音 3:16-17");
     });
 });

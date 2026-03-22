@@ -107,6 +107,13 @@ function isSameVerseRef(a, b) {
     );
 }
 
+function isSameVerseStart(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    return a.book === b.book && a.chapter === b.chapter && a.verse === b.verse;
+}
+
 function findPreferredPreviewTabId(model, preferredTabId) {
     const selectedPreviewTab = getAllPreviewTabs(model).find((tabNode) => tabNode.isSelected());
     if (selectedPreviewTab) {
@@ -132,6 +139,7 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig, startupQue
     const hasRestoredCacheRef = useRef(false);
     const hadCachedPreviewTabsRef = useRef(false);
     const hasAppliedStartupQueryRef = useRef(false);
+    const restoredCachedTabsRef = useRef([]);
     const currentBookNames = getBookNames(bibleDisplayConfig);
 
     const doInternalAction = useCallback(
@@ -376,6 +384,7 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig, startupQue
         const cached = readPreviewTabsCache();
         hadCachedPreviewTabsRef.current = Boolean(cached);
         if (!cached) {
+            restoredCachedTabsRef.current = [];
             syncPreviewStructureRules(flexModel);
             return;
         }
@@ -396,6 +405,7 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig, startupQue
             id: `preview_tab_${index + 1}`,
             verse: VerseRef.from(verseObj),
         }));
+        restoredCachedTabsRef.current = normalizedTabs;
 
         for (let index = 1; index < normalizedTabs.length; index += 1) {
             doInternalAction(
@@ -456,6 +466,14 @@ export default function usePreviewTabs(flexModel, bibleDisplayConfig, startupQue
         });
 
         if (hadCachedPreviewTabsRef.current) {
+            const matchingCachedTab = restoredCachedTabsRef.current.find((tab) =>
+                isSameVerseStart(tab.verse, normalizedStartupVerse)
+            );
+            if (matchingCachedTab?.id) {
+                doInternalAction(FlexLayout.Actions.selectTab(matchingCachedTab.id));
+                setLatestActivePreviewTabId(matchingCachedTab.id);
+                return;
+            }
             openPreviewVerseInNewTab(normalizedStartupVerse);
             return;
         }
