@@ -20,6 +20,7 @@ const defaultSettings = {
     chinese: "简体",
     english: "ASV",
     contrast_layout: "前后",
+    preview_font_size: 100,
     disable_wheel: "否",
     theme: "跟随系统",
     show_tips_on_startup: "是",

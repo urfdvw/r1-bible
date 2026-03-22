@@ -25,6 +25,14 @@ const searchVerseBoxStyle = {
     cursor: "pointer",
 };
 
+function getPreviewCardFontScale(settings) {
+    const value = Number(settings?.preview_font_size);
+    if (!Number.isFinite(value)) {
+        return 1;
+    }
+    return Math.min(1.8, Math.max(0.7, value / 100));
+}
+
 export function PreviewVerseBox({ verseObj, onClick }) {
     const { getMultipleVerses, settings } = useContext(AppContext);
     const baseVerse = VerseRef.from(verseObj);
@@ -39,6 +47,8 @@ export function PreviewVerseBox({ verseObj, onClick }) {
               )
             : [];
     const isParallelContrastLayout = settings.language === "对照" && settings.contrast_layout === "并排";
+    const previewCardFontScale = getPreviewCardFontScale(settings);
+    const previewCardFontSize = `${previewCardFontScale}rem`;
 
     return (
         <Box
@@ -48,7 +58,16 @@ export function PreviewVerseBox({ verseObj, onClick }) {
                 cursor: onClick ? "pointer" : "default",
             }}
         >
-            <Typography sx={{ paddingRight: 1, flexShrink: 0 }}>{baseVerse.verse}</Typography>
+            <Typography
+                sx={{
+                    paddingRight: 1,
+                    flexShrink: 0,
+                    fontSize: previewCardFontSize,
+                    lineHeight: 1.5,
+                }}
+            >
+                {baseVerse.verse}
+            </Typography>
             <Box
                 sx={{
                     flexGrow: 1,
@@ -64,7 +83,15 @@ export function PreviewVerseBox({ verseObj, onClick }) {
                 }}
             >
                 {textList.map((text, index) => (
-                    <Typography key={index} sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                    <Typography
+                        key={index}
+                        sx={{
+                            minWidth: 0,
+                            overflowWrap: "anywhere",
+                            fontSize: previewCardFontSize,
+                            lineHeight: 1.6,
+                        }}
+                    >
                         {text}
                     </Typography>
                 ))}

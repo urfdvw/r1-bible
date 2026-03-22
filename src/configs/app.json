@@ -27,6 +27,11 @@
             "enum": ["前后", "并排"],
             "default": "前后"
         },
+        "preview_font_size": {
+            "title": "预览字号 (%)",
+            "type": "integer",
+            "default": 100
+        },
         "disable_wheel": {
             "title": "禁用滚轮",
             "type": "string",
